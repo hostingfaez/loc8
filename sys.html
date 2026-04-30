@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOC8 | Parcel Monitoring System</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8f9fa;
+            --text-main: #1a1a1a;
+            --text-muted: #ffffff;
+            --accent: #ccff00; 
+            --border: #e9ecef;
+        }
+
+        body {
+            background-color: var(--primary-bg);
+            background-image: linear-gradient(rgba(255,255,255,0.3), rgba(255,255,255,0.3)), url('image1.png');
+             background-size: cover;
+             background-position: center;
+             background-attachment: fixed;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* Navigasi */
+        .nav {
+            border-bottom: 1px solid var(--border);
+            padding: 10px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* Logo tanpa extra styling */
+        .logo img {
+            height: 40px;
+            width: auto;
+            display: block;
+        }
+
+        .btn-back {
+            background-color: var(--accent);
+            color: #000;
+            padding: 8px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0;
+        }
+
+        /* Search Bar Styling */
+        .search-container {
+            position: relative;
+        }
+
+        #studentSearch {
+            padding: 12px 20px;
+            width: 300px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #studentSearch:focus {
+            border-color: var(--text-main);
+        }
+
+        /* Table Styling */
+        .table-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background: #f1f1f1;
+            padding: 15px;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        tr:hover {
+            background-color: #fcfcfc;
+        }
+
+        .status-in { color: #28a745; font-weight: 600; }
+        .status-collected { color: #007bff; font-weight: 600; }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        footer {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav">
+        <div class="logo">
+            <!-- Ganti nine.jpg dengan fail logo anda -->
+            <img src="nine.jpg" alt="LOC8">
+        </div>
+        <a href="index.html" class="btn-back">Back to Home</a>
+    </nav>
+
+    <div class="container">
+        <div class="header-section">
+            <div>
+                <h1>LOC8: Smart Parcel Management for<span style="background: var(--accent); padding: 0 10px;">Gerai Tanjung</span></h1>
+                <p style="color: var(--text-muted); margin: 5px 0 0 0;">Real-time parcel tracking, automated RFID registration, and Agentic AI notifications for UiTM students.</p>
+            </div>
+            <br>
+            <br>
+            <br>
+
+
+            <div class="search-container">
+                <input type="text" id="studentSearch" placeholder="Cari Student ID..." onkeyup="filterTable()">
+            </div>
+        </div>
+
+        <div class="table-card">
+            <table id="data-table">
+                <thead>
+                    <tr id="table-header">
+                        <!-- Header dinamik -->
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:40px; color:#999;">Memuatkan data...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 LOC8. All rights reserved. 
+    </footer>
+
+    <script>
+        const SHEET_ID = '18zECzuHvM2HgS7iEMXe7VkT2uMkQYubg7b-6JJ6-d6E'; 
+        const SHEET_TITLE = 'ParcelDB'; 
+        const SHEET_RANGE = 'A1:F50'; 
+
+        const FULL_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_TITLE}&range=${SHEET_RANGE}`;
+
+        let allData = []; // Simpan data asal untuk tapisan
+
+        async function init() {
+            try {
+                const res = await fetch(FULL_URL);
+                const text = await res.text();
+                const rawData = JSON.parse(text.substr(47).slice(0, -2));
+                
+                // Simpan columns dan rows
+                const columns = rawData.table.cols;
+                const rows = rawData.table.rows;
+                
+                renderHeader(columns);
+                allData = rows; 
+                renderRows(allData);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('table-body').innerHTML = '<tr><td colspan="6" style="color:red; text-align:center; padding:20px;">Gagal memuatkan data. Sila semak akses fail.</td></tr>';
+            }
+        }
+
+        function renderHeader(cols) {
+            const headerRow = document.getElementById('table-header');
+            headerRow.innerHTML = '';
+            cols.forEach(col => {
+                let th = document.createElement('th');
+                th.innerText = col.label || '';
+                headerRow.appendChild(th);
+            });
+        }
+
+        function renderRows(rows) {
+            const bodyRows = document.getElementById('table-body');
+            bodyRows.innerHTML = '';
+
+            if (rows.length === 0) {
+                bodyRows.innerHTML = '<tr><td colspan="6" class="no-results">Tiada data dijumpai.</td></tr>';
+                return;
+            }
+
+            rows.forEach(row => {
+                let tr = document.createElement('tr');
+                row.c.forEach((cell, index) => {
+                    let td = document.createElement('td');
+                    let value = cell ? (cell.f ? cell.f : cell.v) : '';
+                    
+                    if(index === 1) { // Style Status
+                        if(value === 'IN') td.className = 'status-in';
+                        if(value === 'COLLECTED') td.className = 'status-collected';
+                    }
+                    
+                    td.innerText = value;
+                    tr.appendChild(td);
+                });
+                bodyRows.appendChild(tr);
+            });
+        }
+
+        // Fungsi Carian (Search)
+        function filterTable() {
+            const input = document.getElementById('studentSearch').value.toUpperCase();
+            const filteredRows = allData.filter(row => {
+                // Indeks 4 adalah kolom Student ID (berdasarkan image_0be9a5.png)
+                const studentIdCell = row.c[4];
+                const studentIdValue = studentIdCell ? String(studentIdCell.v).toUpperCase() : '';
+                return studentIdValue.includes(input);
+            });
+            renderRows(filteredRows);
+        }
+
+        init();
+    </script>
+</body>
+</html>
