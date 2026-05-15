@@ -160,8 +160,7 @@
 
     <nav class="nav">
         <div class="logo">
-            <!-- Ganti nine.jpg dengan fail logo anda -->
-            <img src="bg.png"alt="LOC8">
+            <img src="bg.png" alt="LOC8">
         </div>
         <a href="index.html" class="btn-back">Back to Home</a>
     </nav>
@@ -169,16 +168,13 @@
     <div class="container">
         <div class="header-section">
             <div>
-                <h1>LOC8: Smart Parcel Management for<span style="background: var(--accent); padding: 0 10px;">Gerai Tanjung</span></h1>
+                <h1>LOC8: Smart Parcel Management for <span style="background: var(--accent); padding: 0 10px;">Gerai Tanjung</span></h1>
                 <p style="color: var(--text-muted); margin: 5px 0 0 0;">Real-time parcel tracking, automated RFID registration, and Agentic AI notifications for UiTM students.</p>
             </div>
-            <br>
-            <br>
-            <br>
-
+            <br><br><br>
 
             <div class="search-container">
-                <input type="text" id="studentSearch" placeholder="Enter Student ID..." onkeyup="filterTable()">
+                <input type="text" id="studentSearch" placeholder="Enter Student ID (e.g. 2025...)" onkeyup="filterTable()">
             </div>
         </div>
 
@@ -186,12 +182,11 @@
             <table id="data-table">
                 <thead>
                     <tr id="table-header">
-                        <!-- Header dinamik -->
-                    </tr>
+                        </tr>
                 </thead>
                 <tbody id="table-body">
                     <tr>
-                        <td colspan="6" style="text-align:center; padding:40px; color:#999;">Uploading Info...</td>
+                        <td colspan="7" style="text-align:center; padding:40px; color:#999;">Uploading Info...</td>
                     </tr>
                 </tbody>
             </table>
@@ -199,34 +194,35 @@
     </div>
 
     <footer>
-        &copy; 2026 LOC8. All rights reserved. 
+        &copy; 2026 LOC8. All rights reserved.
     </footer>
 
     <script>
-        const SHEET_ID = '18zECzuHvM2HgS7iEMXe7VkT2uMkQYubg7b-6JJ6-d6E'; 
-        const SHEET_TITLE = 'ParcelDB'; 
-        const SHEET_RANGE = 'A1:F50'; 
+        const SHEET_ID = '18zECzuHvM2HgS7iEMXe7VkT2uMkQYubg7b-6JJ6-d6E';
+        const SHEET_TITLE = 'ParcelDB';
+        // Range A1:G100 merangkumi Kolum G (STUD ID)
+        const SHEET_RANGE = 'A1:G100';
 
         const FULL_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_TITLE}&range=${SHEET_RANGE}`;
 
-        let allData = []; // Simpan data asal untuk tapisan
+        let allData = [];
 
         async function init() {
             try {
                 const res = await fetch(FULL_URL);
                 const text = await res.text();
+                // Membersihkan data JSON dari Google Sheets API
                 const rawData = JSON.parse(text.substr(47).slice(0, -2));
-                
-                // Simpan columns dan rows
+
                 const columns = rawData.table.cols;
                 const rows = rawData.table.rows;
-                
+
                 renderHeader(columns);
-                allData = rows; 
+                allData = rows;
                 renderRows(allData);
             } catch (err) {
                 console.error(err);
-                document.getElementById('table-body').innerHTML = '<tr><td colspan="6" style="color:red; text-align:center; padding:20px;">Gagal memuatkan data. Sila semak akses fail.</td></tr>';
+                document.getElementById('table-body').innerHTML = '<tr><td colspan="7" style="color:red; text-align:center; padding:20px;">Gagal memuatkan data. Sila semak akses fail.</td></tr>';
             }
         }
 
@@ -245,7 +241,7 @@
             bodyRows.innerHTML = '';
 
             if (rows.length === 0) {
-                bodyRows.innerHTML = '<tr><td colspan="6" class="no-results">Tiada data dijumpai.</td></tr>';
+                bodyRows.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">Tiada data dijumpai.</td></tr>';
                 return;
             }
 
@@ -253,13 +249,16 @@
                 let tr = document.createElement('tr');
                 row.c.forEach((cell, index) => {
                     let td = document.createElement('td');
-                    let value = cell ? (cell.f ? cell.f : cell.v) : '';
-                    
-                    if(index === 1) { // Style Status
-                        if(value === 'IN') td.className = 'status-in';
-                        if(value === 'COLLECTED') td.className = 'status-collected';
+                    // Ambil nilai yang dipaparkan (f) atau nilai mentah (v)
+                    let value = cell ? (cell.f ? cell.f : (cell.v !== null ? cell.v : '')) : '';
+
+                    // Warna untuk Status (Indeks 1 = Kolum B)
+                    if(index === 1) {
+                        if(value === 'IN') td.style.color = '#2ecc71'; // Hijau
+                        if(value === 'COLLECTED') td.style.color = '#e67e22'; // Jingga
+                        td.style.fontWeight = 'bold';
                     }
-                    
+
                     td.innerText = value;
                     tr.appendChild(td);
                 });
@@ -267,15 +266,21 @@
             });
         }
 
-        // Fungsi Carian (Search)
+        // Fungsi Filter Utama
         function filterTable() {
-            const input = document.getElementById('studentSearch').value.toUpperCase();
+            const input = document.getElementById('studentSearch').value.trim().toUpperCase();
+            
             const filteredRows = allData.filter(row => {
-                // Indeks 4 adalah kolom Student ID (berdasarkan image_0be9a5.png)
-                const studentIdCell = row.c[4];
-                const studentIdValue = studentIdCell ? String(studentIdCell.v).toUpperCase() : '';
+                // Pastikan kolum G (indeks 6) wujud
+                if (!row.c || !row.c[6]) return false;
+                
+                // Ambil data dari sel G (Formatted value lebih tepat untuk nombor ID)
+                const cell = row.c[6];
+                const studentIdValue = (cell.f ? cell.f : String(cell.v)).toUpperCase();
+                
                 return studentIdValue.includes(input);
             });
+            
             renderRows(filteredRows);
         }
 
